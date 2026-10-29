@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container-fluid mt-4 mb-5">
+    <h3 class="fw-bold mb-4">💬 ระบบแชทบริการลูกค้า (Admin Dashboard)</h3>
+    <div class="row">
+        <!-- ฝั่งซ้าย: รายชื่อลูกค้า -->
+        <div class="col-md-4 mb-3">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-dark text-white fw-bold">
+                    รายชื่อลูกค้าที่ติดต่อเข้ามา
+                </div>
+                <div class="list-group list-group-flush overflow-auto" style="max-height: 550px;">
+                    {% for user in chat_users %}
+                        <a href="{{ url_for('admin_chat', user_id=user.id) }}" class="list-group-item list-group-item-action {% if selected_user and selected_user.id == user.id %}active{% endif %}">
+                            <div class="fw-bold">{{ user.username or user.email }}</div>
+                            <small class="{% if selected_user and selected_user.id == user.id %}text-white-50{% else %}text-muted{% endif %}">ID: {{ user.id }}</small>
+                        </a>
+                    {% else %}
+                        <div class="p-3 text-center text-muted">ยังไม่มีลูกค้าทักแชทเข้ามา</div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- ฝั่งขวา: ช่องสนทนา -->
+        <div class="col-md-8">
+            {% if selected_user %}
+                <div class="card shadow-sm border-0">
+                    <div class="card-header bg-primary text-white fw-bold">
+                        กำลังคุยกับ: {{ selected_user.username or selected_user.email }}
+                    </div>
+                    
+                    <div class="card-body overflow-auto p-3" id="chatBox" style="height: 400px; background-color: #f8f9fa;">
+                        {% for msg in messages %}
+                            {% set is_admin_msg = (msg.sender_id == session['user_id']) %}
+                            <div class="d-flex mb-3 {% if is_admin_msg %}justify-content-end{% else %}justify-content-start{% endif %}">
+                                <div class="p-3 rounded-3 shadow-sm {% if is_admin_msg %}bg-success text-white{% else %}bg-white text-dark border{% endif %}" style="max-width: 75%;">
+                                    <div class="fw-bold small mb-1">
+                                        {% if is_admin_msg %}แอดมิน{% else %}{{ selected_user.username or 'ลูกค้า' }}{% endif %}
+                                    </div>
+
+                                    {% if msg.message %}
+                                        <p class="mb-1" style="white-space: pre-line;">{{ msg.message }}</p>
+                                    {% endif %}
+
+                                    {% if msg.file_type == 'image' %}
+                                        <!-- คลิกรูปภาพแล้วเปิด Popup ขนาดใหญ่ทันที -->
+                                        {% set img_path = url_for('static', filename=msg.file_url.replace('static/', '')) %}
+                                        <a href="javascript:void(0);" onclick="window.open('{{ img_path }}', '_blank', 'width=650,height=850,resizable=yes');">
+                                            <img src="{{ img_path }}" class="img-fluid rounded mt-2 shadow-sm" style="max-height: 200px; cursor: pointer; object-fit: cover;" alt="Image">
+                                        </a>
+                                    {% elif msg.file_type == 'file' %}
+                                        <div class="mt-2">
+                                            <a href="{{ url_for('static', filename=msg.file_url.replace('static/', '')) }}" target="_blank" class="btn btn-sm {% if is_admin_msg %}btn-light text-success{% else %}btn-outline-primary{% endif %}">
+                                                📎 ดาวน์โหลดไฟล์แนบ
+                                            </a>
+                                        </div>
+                                    {% endif %}
+
+                                    <div class="text-end small opacity-75 mt-1" style="font-size: 0.75rem;">
+                                        {{ msg.timestamp.strftime('%H:%M | %d/%m/%Y') }}
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="card-footer bg-white p-3">
+                        <form action="{{ url_for('admin_chat', user_id=selected_user.id) }}" method="POST" enctype="multipart/form-data">
+                            <div class="mb-2">
+                                <textarea name="message" class="form-control" rows="2" placeholder="พิมพ์ข้อความตอบกลับลูกค้า..."></textarea>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <label class="btn btn-outline-secondary btn-sm mb-0">
+                                        📎 แนบรูป/ไฟล์ <input type="file" name="file" class="d-none" id="adminFileInput" onchange="updateAdminFileName(this)">
+                                    </label>
+                                    <span id="adminFileNameDisplay" class="small text-muted ms-2"></span>
+                                </div>
+                                <button type="submit" class="btn btn-success px-4">ตอบกลับ 🚀</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            {% else %}
+                <div class="card shadow-sm border-0 p-5 text-center text-muted">
+                    <h5>👈 กรุณาเลือกรายชื่อลูกค้าด้านซ้ายเพื่อเริ่มการสนทนา</h5>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+    const chatBox = document.getElementById('chatBox');
+    if (chatBox) {
+        chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    function updateAdminFileName(input) {
+        const display = document.getElementById('adminFileNameDisplay');
+        if (input.files && input.files[0]) {
+            display.textContent = input.files[0].name;
+        } else {
+            display.textContent = '';
+        }
+    }
+</script>
+{% endblock %}

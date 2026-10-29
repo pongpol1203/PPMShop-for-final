@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4 mb-5" style="max-width: 800px;">
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-dark text-white fw-bold d-flex align-items-center gap-2">
+            💬 ติดต่อสอบถาม / แชทกับแอดมิน
+        </div>
+        
+        <!-- กล่องแสดงข้อความ -->
+        <div class="card-body overflow-auto p-3" id="chatBox" style="height: 450px; background-color: #f8f9fa;">
+            {% for msg in messages %}
+                {% set is_me = (msg.sender_id == session['user_id']) %}
+                <div class="d-flex mb-3 {% if is_me %}justify-content-end{% else %}justify-content-start{% endif %}">
+                    <div class="p-3 rounded-3 shadow-sm style-box {% if is_me %}bg-primary text-white{% else %}bg-white text-dark border{% endif %}" style="max-width: 75%;">
+                        <div class="fw-bold small mb-1">
+                            {% if is_me %}คุณ{% else %}แอดมิน (Admin){% endif %}
+                        </div>
+
+                        {% if msg.message %}
+                            <p class="mb-1" style="white-space: pre-line;">{{ msg.message }}</p>
+                        {% endif %}
+
+                        <!-- แสดงรูปภาพ -->
+                        {% if msg.file_type == 'image' %}
+                            <a href="{{ url_for('static', filename=msg.file_url.replace('static/', '')) }}" target="_blank">
+                                <img src="{{ url_for('static', filename=msg.file_url.replace('static/', '')) }}" class="img-fluid rounded mt-2 style-img" style="max-height: 200px;" alt="Attached Image">
+                            </a>
+                        {% elif msg.file_type == 'file' %}
+                            <!-- แสดงปุ่มดาวน์โหลดไฟล์ -->
+                            <div class="mt-2">
+                                <a href="{{ url_for('static', filename=msg.file_url.replace('static/', '')) }}" target="_blank" class="btn btn-sm {% if is_me %}btn-light text-primary{% else %}btn-outline-primary{% endif %}">
+                                    📎 ดาวน์โหลดไฟล์แนบ
+                                </a>
+                            </div>
+                        {% endif %}
+
+                        <div class="text-end small opacity-75 mt-1" style="font-size: 0.75rem;">
+                            {{ msg.timestamp.strftime('%H:%M | %d/%m/%Y') }}
+                        </div>
+                    </div>
+                </div>
+            {% else %}
+                <div class="text-center text-muted my-5">
+                    <p>ยังไม่มีประวัติการพูดคุย พิมพ์ข้อความเพื่อเริ่มแชทกับแอดมินได้เลยครับ!</p>
+                </div>
+            {% endfor %}
+        </div>
+
+        <!-- ฟอร์มส่งข้อความ/รูป/ไฟล์ -->
+        <div class="card-footer bg-white p-3">
+            <form action="{{ url_for('customer_chat') }}" method="POST" enctype="multipart/form-data">
+                <div class="mb-2">
+                    <textarea name="message" class="form-control" rows="2" placeholder="พิมพ์ข้อความของคุณที่นี่..."></textarea>
+                </div>
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <label class="btn btn-outline-secondary btn-sm mb-0">
+                            📎 แนบรูป/ไฟล์ <input type="file" name="file" class="d-none" id="fileInput" onchange="updateFileName(this)">
+                        </label>
+                        <span id="fileNameDisplay" class="small text-muted ms-2"></span>
+                    </div>
+                    <button type="submit" class="btn btn-primary px-4">ส่งข้อความ 🚀</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    // เลื่อนกล่องแชทลงล่างสุดอัตโนมัติ
+    const chatBox = document.getElementById('chatBox');
+    chatBox.scrollTop = chatBox.scrollHeight;
+
+    function updateFileName(input) {
+        const display = document.getElementById('fileNameDisplay');
+        if (input.files && input.files[0]) {
+            display.textContent = input.files[0].name;
+        } else {
+            display.textContent = '';
+        }
+    }
+</script>
+{% endblock %}

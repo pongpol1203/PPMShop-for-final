@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4 mb-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>📊 รายงานและสรุปยอดขายสินค้า</h2>
+        <a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary">← กลับหน้าแดชบอร์ด</a>
+    </div>
+
+    <!-- ฟอร์มเลือกกรองข้อมูล (รายวัน / รายเดือน / รายปี) -->
+    <div class="card p-3 mb-4 bg-light shadow-sm">
+        <form method="GET" action="{{ url_for('sales_report') }}" class="row g-3 align-items-center">
+            <div class="col-md-3">
+                <label class="form-label fw-bold">เลือกรูปแบบการดูยอดขาย:</label>
+                <select name="filter_type" class="form-select" id="filterTypeSelect" onchange="this.form.submit()">
+                    <option value="day" {% if filter_type == 'day' %}selected{% endif %}>ดูแบบรายวัน</option>
+                    <option value="month" {% if filter_type == 'month' %}selected{% endif %}>ดูแบบรายเดือน</option>
+                    <option value="year" {% if filter_type == 'year' %}selected{% endif %}>ดูแบบรายปี</option>
+                    <option value="all" {% if filter_type == 'all' %}selected{% endif %}>ดูยอดขายทั้งหมด</option>
+                </select>
+            </div>
+
+            {% if filter_type != 'all' %}
+            <div class="col-md-4">
+                <label class="form-label fw-bold">ระบุ ช่วงเวลา/วันที่:</label>
+                {% if filter_type == 'day' %}
+                    <input type="date" name="selected_date" class="form-control" value="{{ selected_date }}" onchange="this.form.submit()">
+                {% elif filter_type == 'month' %}
+                    <input type="month" name="selected_date" class="form-control" value="{{ selected_date }}" onchange="this.form.submit()">
+                {% elif filter_type == 'year' %}
+                    <input type="number" name="selected_date" class="form-control" min="2020" max="2030" value="{{ selected_date }}" placeholder="เช่น 2026">
+                {% endif %}
+            </div>
+            <div class="col-md-2 align-self-end">
+                <button type="submit" class="btn btn-primary w-100">🔍 ค้นหา</button>
+            </div>
+            {% endif %}
+        </form>
+    </div>
+
+    <!-- สรุปยอดขายรวมในเงื่อนไขที่เลือก -->
+    <div class="alert alert-success d-flex justify-content-between align-items-center shadow-sm p-3 mb-4">
+        <h4 class="mb-0">
+            ยอดขายรวมประจำ ({% if filter_type == 'day' %}วัน{% elif filter_type == 'month' %}เดือน{% elif filter_type == 'year' %}ปี{% else %}ทั้งหมด{% endif %}): 
+            <strong class="text-decoration-underline">{{ selected_date }}</strong>
+        </h4>
+        <h3 class="mb-0 fw-bold">฿{{ "{:,.2f}".format(total_sales_amount) }}</h3>
+    </div>
+
+    <div class="row">
+        <!-- ตารางที่ 1: สรุปรายการสินค้าที่ขายได้ในรอบนี้ -->
+        <div class="col-md-6 mb-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0">📦 สรุปสินค้าที่ขายได้ (ยอดสะสม)</h5>
+                </div>
+                <div class="card-body p-0">
+                    {% if product_summary %}
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>ชื่อสินค้า</th>
+                                <th class="text-center">จำนวนที่ขายได้</th>
+                                <th class="text-end">ราคารวม</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for p_name, info in product_summary.items() %}
+                            <tr>
+                                <td><strong class="text-primary">{{ p_name }}</strong></td>
+                                <td class="text-center"><span class="badge bg-info text-dark fs-6">{{ info.quantity }} ชิ้น</span></td>
+                                <td class="text-end fw-bold">฿{{ "{:,.2f}".format(info.total_price) }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    {% else %}
+                    <p class="text-muted text-center p-4 mb-0">ไม่มีรายการสินค้าที่ขายได้ในช่วงเวลานี้</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- ตารางที่ 2: รายการออเดอร์ในรอบนี้ -->
+        <div class="col-md-6 mb-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">🧾 คำสั่งซื้อในรอบนี้ ({{ orders|length }} รายการ)</h5>
+                </div>
+                <div class="card-body p-0">
+                    {% if orders %}
+                    <div class="accordion accordion-flush" id="ordersAccordion">
+                        {% for order in orders %}
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="heading{{ order.id }}">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ order.id }}">
+                                    <div class="w-100 d-flex justify-content-between me-3">
+                                        <span><strong>#{{ order.id }}</strong> - {{ order.user_email }}</span>
+                                        <span class="text-success fw-bold">฿{{ "{:,.2f}".format(order.total_price) }}</span>
+                                    </div>
+                                </button>
+                            </h2>
+                            <div id="collapse{{ order.id }}" class="accordion-collapse collapse" data-bs-parent="#ordersAccordion">
+                                <div class="accordion-body bg-light">
+                                    <small class="text-muted">วันที่สั่งซื้อ: {{ order.date }}</small><br>
+                                    <small class="text-muted">ที่อยู่: {{ order.address }}</small>
+                                    <hr class="my-2">
+                                    <h6>รายการสินค้าในออเดอร์นี้:</h6>
+                                    <ul class="mb-0">
+                                        {% for item in order.items %}
+                                        <li>{{ item.product_name }} x {{ item.quantity }} ชิ้น (฿{{ "{:,.2f}".format(item.subtotal) }})</li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="text-muted text-center p-4 mb-0">ไม่มีออเดอร์ในช่วงเวลานี้</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

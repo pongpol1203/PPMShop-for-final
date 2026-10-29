@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4 mb-5" style="max-width: 800px;">
+    <!-- หัวข้อและปุ่มกลับหน้าแดชบอร์ด -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h4>💬 แชทสนทนากับลูกค้า: <span class="text-primary">{{ target_user.username }}</span></h4>
+        <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-secondary btn-sm">⬅️ กลับแดชบอร์ด</a>
+    </div>
+
+    <!-- กล่องแสดงประวัติการแชท -->
+    <div class="card shadow-sm mb-3 border-0">
+        <div class="card-body bg-light" style="height: 450px; overflow-y: scroll; display: flex; flex-direction: column;">
+            {% if messages %}
+                {% for msg in messages %}
+                    <div class="mb-2 p-2 rounded shadow-sm {% if msg.sender_id == session.get('user_id') %}ms-auto bg-primary text-white{% else %}me-auto bg-white text-dark border{% endif %}" style="max-width: 75%; word-break: break-word;">
+                        <small class="d-block {% if msg.sender_id == session.get('user_id') %}text-white-50{% else %}text-muted{% endif %}" style="font-size: 0.75rem;">
+                            {% if msg.sender_id == session.get('user_id') %}คุณ (Admin){% else %}{{ target_user.username }}{% endif %} - {{ msg.timestamp }}
+                        </small>
+                        
+                        <!-- แสดงรูปภาพจากฟิลด์ file_url เดิม -->
+                        {% if msg.file_url %}
+                            <div class="my-1">
+                                <a href="{{ msg.file_url }}" target="_blank">
+                                    <img src="{{ msg.file_url }}" class="img-fluid rounded border" style="max-height: 200px; object-fit: cover;" alt="Attached file">
+                                </a>
+                            </div>
+                        {% endif %}
+
+                        <!-- แสดงข้อความ -->
+                        {% if msg.message %}
+                            <span>{{ msg.message }}</span>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            {% else %}
+                <div class="text-center text-muted my-auto">ยังไม่มีข้อความสนทนา เริ่มพิมพ์ทักทายลูกค้าได้เลยครับ</div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- ฟอร์มสำหรับพิมพ์ข้อความและแนบรูปภาพ (แก้ไข name="file" เรียบร้อย) -->
+    <form method="POST" enctype="multipart/form-data" class="card p-2 bg-white shadow-sm border-0">
+        <div class="d-flex gap-2 align-items-center">
+            <input type="text" name="message" class="form-control" placeholder="พิมพ์ข้อความ..." autocomplete="off">
+            <label class="btn btn-outline-secondary mb-0 fw-bold" style="white-space: nowrap; cursor: pointer;">
+                📷 แนบรูป <input type="file" name="file" accept="image/*" hidden onchange="document.getElementById('file-chosen').innerText = this.files[0] ? this.files[0].name : '';">
+            </label>
+            <button type="submit" class="btn btn-primary fw-bold px-4 shadow-sm" style="white-space: nowrap;">ส่ง</button>
+        </div>
+        <small id="file-chosen" class="text-muted mt-1 ms-1" style="font-size: 0.8rem;"></small>
+    </form>
+</div>
+{% endblock %}

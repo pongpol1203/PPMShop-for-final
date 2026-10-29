@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4 mb-5" style="max-width: 700px;">
+    <!-- ส่วนหัวใบเสร็จ -->
+    <div class="card shadow-sm border-0 p-4 bg-white" id="receiptArea">
+        <div class="text-center mb-4">
+            <h3 class="fw-bold text-dark">PPM Shop</h3>
+            <p class="text-muted mb-1">ใบเสร็จรับเงิน / ใบกำกับภาษีอย่างย่อ</p>
+            <small class="text-muted">ที่อยู่ร้าน: มหาวิทยาลัยขอนแก่น จ.ขอนแก่น | โทร: 0xx-xxx-xxxx</small>
+            <hr>
+        </div>
+
+        <!-- รายละเอียดคำสั่งซื้อ -->
+        <div class="row mb-3">
+            <div class="col-6">
+                <p class="mb-1"><strong>เลขที่คำสั่งซื้อ:</strong> #{{ order.id }}</p>
+                <p class="mb-1"><strong>ลูกค้า:</strong> {{ order.user_email }}</p>
+            </div>
+            <div class="col-6 text-end">
+                <p class="mb-1"><strong>วันที่:</strong> {{ order.date }}</p>
+                <p class="mb-1"><strong>สถานะ:</strong> <span class="badge bg-success">{{ order.status }}</span></p>
+            </div>
+        </div>
+
+        <!-- ตารางรายการสินค้าในบิล -->
+        <div class="table-responsive mb-3">
+            <table class="table table-bordered align-middle">
+                <thead class="table-dark text-center">
+                    <tr>
+                        <th>สินค้า</th>
+                        <th>ราคาต่อหน่วย</th>
+                        <th>จำนวน</th>
+                        <th>ราคารวม</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in order.items %}
+                    <tr>
+                        <td>{{ item.product_name }}</td>
+                        <td class="text-end">฿{{ "{:,.2f}".format(item.price) }}</td>
+                        <td class="text-center">{{ item.quantity }}</td>
+                        <td class="text-end">฿{{ "{:,.2f}".format(item.subtotal) }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- สรุปยอดเงิน & VAT 7% -->
+        <div class="row justify-content-end">
+            <div class="col-md-6">
+                <table class="table table-sm borderless">
+                    <tr>
+                        <td>มูลค่าสินค้า (Excl. VAT):</td>
+                        <td class="text-end">฿{{ "{:,.2f}".format(net_price) }}</td>
+                    </tr>
+                    <tr>
+                        <td>VAT 7%:</td>
+                        <td class="text-end">฿{{ "{:,.2f}".format(vat_amount) }}</td>
+                    </tr>
+                    <tr class="fw-bold fs-5 text-danger border-top">
+                        <td>ยอดสุทธิรวมทั้งสิ้น:</td>
+                        <td class="text-end">฿{{ "{:,.2f}".format(order.total_price) }}</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <div class="text-center mt-4">
+            <p class="text-muted small">✨ ขอบคุณที่อุดหนุนร้าน Kpop Shop ByPPM ครับ! ✨</p>
+        </div>
+    </div>
+
+    <!-- ปุ่มกดพิมพ์ใบเสร็จ หรือย้อนกลับ -->
+    <div class="text-center mt-4 d-flex justify-content-center gap-2">
+        <button onclick="window.print();" class="btn btn-primary px-4 fw-bold">🖨️ พิมพ์ / บันทึกใบเสร็จ</button>
+        <a href="javascript:history.back();" class="btn btn-outline-secondary px-4 fw-bold">⬅️ ย้อนกลับ</a>
+    </div>
+</div>
+{% endblock %}

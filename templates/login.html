@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-5">
+        <div class="card shadow-sm p-4">
+            <h3 class="text-center mb-4">เข้าสู่ระบบ</h3>
+            <form method="POST">
+                <!-- 📍 เพิ่มบรรทัดนี้: ช่องซ่อนเพื่อส่งค่า next กลับไปให้ Python -->
+                <input type="hidden" name="next" value="{{ request.args.get('next', '') }}">
+
+                <div class="mb-3">
+                    <label class="form-label">Gmail (หรือชื่อผู้ดูแลระบบ)</label>
+                    <!-- name="username" ตรงตามฟอร์มเดิมของคุณ -->
+                    <input type="email" name="email" class="form-control" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">รหัสผ่าน</label>
+                    <input type="password" name="password" class="form-control" required>
+                </div>
+                <button type="submit" class="btn btn-primary w-100">เข้าสู่ระบบ</button>
+            </form>
+            
+            <div class="text-center mt-3">
+                <p class="text-muted small">ยังไม่มีบัญชีใช่ไหม? <a href="{{ url_for('register') }}">สมัครสมาชิกที่นี่</a></p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

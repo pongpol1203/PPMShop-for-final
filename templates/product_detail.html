@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="row">
+    <!-- ฝั่งซ้าย: รูปภาพหลักและแกลเลอรีรูปภาพเพิ่มเติม -->
+    <div class="col-md-6 mb-4">
+        <div class="card shadow-sm p-2 mb-3">
+            {% set main_img = url_for('static', filename=product.image_url.replace('static/', '')) if product.image_url.startswith('static/') else product.image_url %}
+            <!-- คลิกที่รูปหลักเพื่อเปิด Popup ขนาดใหญ่ -->
+            <a href="javascript:void(0);" onclick="window.open('{{ main_img }}', '_blank', 'width=700,height=700,resizable=yes');">
+                <img src="{{ main_img }}" class="img-fluid rounded" style="max-height: 400px; width: 100%; object-fit: contain; cursor: pointer;" alt="{{ product.name }}">
+            </a>
+        </div>
+
+        <!-- แสดงรูปภาพเพิ่มเติม (Gallery) -->
+        {% if product.images %}
+            <h5 class="mb-3">รูปภาพเพิ่มเติม</h5>
+            <div class="row g-2">
+                {% for img in product.images %}
+                    <div class="col-3">
+                        <div class="card shadow-sm p-1">
+                            {% set gallery_img = url_for('static', filename=img.image_url.replace('static/', '')) if img.image_url.startswith('static/') else img.image_url %}
+                            <!-- คลิกที่รูปในแกลเลอรีเพื่อเปิด Popup ขนาดใหญ่ได้เช่นกัน -->
+                            <a href="javascript:void(0);" onclick="window.open('{{ gallery_img }}', '_blank', 'width=700,height=700,resizable=yes');">
+                                <img src="{{ gallery_img }}" class="img-fluid rounded" style="height: 80px; width: 100%; object-fit: cover; cursor: pointer;" alt="Gallery">
+                            </a>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- ฝั่งขวา: รายละเอียดสินค้าและปุ่มสั่งซื้อ -->
+    <div class="col-md-6">
+        <div class="card shadow-sm p-4">
+            
+            <!-- 📍 จัดป้ายหมวดหมู่และแบรนด์ให้อยู่ชิดกันในบรรทัดเดียว -->
+            <div class="mb-2 d-flex align-items-center gap-2">
+                <span class="badge bg-secondary">{{ product.category }}</span>
+                
+                {% if product.brand %}
+                    <span class="badge bg-info text-dark">{{ product.brand }}</span>
+                {% endif %}
+            </div>
+
+            <h2 class="mb-3">{{ product.name }}</h2>
+            <h3 class="text-danger fw-bold mb-1">฿{{ "{:,.2f}".format(product.price) }}</h3>
+            <small class="text-muted d-block mb-3">(รวม VAT 7% แล้ว)</small>
+            <p class="text-muted mb-2"><strong>คงเหลือในคลัง:</strong> {{ product.stock }} ชิ้น</p>
+            <hr>
+            
+            <h5 class="mb-2">รายละเอียดสินค้า:</h5>
+            <p class="text-muted" style="white-space: pre-line;">{{ product.description }}</p>
+            
+            <hr>
+
+            <div class="d-grid gap-2">
+                {% if product.stock > 0 %}
+                    <a href="{{ url_for('add_to_cart', product_id=product.id) }}" class="btn btn-success btn-lg">🛒 เพิ่มลงตะกร้าสินค้า</a>
+                {% else %}
+                    <button class="btn btn-secondary btn-lg" disabled>สินค้าหมด</button>
+                {% endif %}
+                <a href="{{ url_for('index') }}" class="btn btn-outline-secondary">⬅️ กลับหน้าแรก</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

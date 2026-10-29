@@ -1,0 +1,229 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4 mb-5">
+    <!-- ส่วนหัวหน้าแดชบอร์ดและปุ่มทางลัดไปหน้ารายงานยอดขาย -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>📊 แดชบอร์ดผู้ดูแลระบบ</h2>
+        <div>
+            <a href="{{ url_for('admin_orders') }}" class="btn btn-outline-dark shadow-sm me-2">📦 จัดการคำสั่งซื้อและสลิป</a>
+            <a href="{{ url_for('sales_report') }}" class="btn btn-success shadow-sm">📈 รายงานยอดขายละเอียด</a>
+        </div>
+    </div>
+
+    <!-- กล่องสรุปยอดขายภาพรวม (รายวัน, รายเดือน, รายปี, ยอดรวมทั้งหมด) -->
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="card text-white bg-primary shadow-sm border-0">
+                <div class="card-body text-center">
+                    <h6 class="card-title">ยอดขายวันนี้</h6>
+                    <h3>฿{{ "{:,.2f}".format(daily_sales) }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card text-white bg-success shadow-sm border-0">
+                <div class="card-body text-center">
+                    <h6 class="card-title">ยอดขายเดือนนี้</h6>
+                    <h3>฿{{ "{:,.2f}".format(monthly_sales) }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card text-white bg-warning shadow-sm border-0">
+                <div class="card-body text-center">
+                    <h6 class="card-title">ยอดขายปีนี้</h6>
+                    <h3>฿{{ "{:,.2f}".format(yearly_sales) }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card text-white bg-dark shadow-sm border-0">
+                <div class="card-body text-center">
+                    <h6 class="card-title">ยอดขายรวมทั้งหมด</h6>
+                    <h3>฿{{ "{:,.2f}".format(total_sales) }}</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ฟอร์มสำหรับเพิ่มสินค้าใหม่เข้าคลัง -->
+    <div class="card shadow-sm mb-5 border-0">
+        <div class="card-header bg-dark text-white">
+            <h5 class="mb-0">➕ เพิ่มสินค้าใหม่เข้าคลัง</h5>
+        </div>
+        <div class="card-body bg-light">
+            <form method="POST" enctype="multipart/form-data">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">ชื่อสินค้า</label>
+                        <input type="text" name="name" class="form-control" required>
+                    </div>
+
+                    <!-- ช่อง "ประเภทสินค้า" และ "แบรนด์" -->
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">ประเภทสินค้า (Category)</label>
+                            <input type="text" name="category" class="form-control" placeholder="เช่น อัลบั้ม, แท่งไฟ, เสื้อผ้า" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">แบรนด์ (Brand)</label>
+                            <input type="text" name="brand" class="form-control" placeholder="เช่น IVE, BLACKPINK, SM Ent.">
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">รายละเอียดสินค้า</label>
+                        <textarea name="description" class="form-control" rows="3" required></textarea>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label fw-bold">ราคา (บาท)</label>
+                            <input type="number" step="0.01" name="price" class="form-control" required>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label fw-bold">จำนวนสต็อก (ชิ้น)</label>
+                            <input type="number" name="stock" class="form-control" required>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label fw-bold">รูปภาพสินค้า (หลัก + แกลเลอรี)</label>
+                            <input type="file" name="image" class="form-control mb-1" accept="image/*" required>
+                            <input type="file" name="extra_images" class="form-control" accept="image/*" multiple>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 🏷️ สถานะพิเศษของสินค้า -->
+                <div class="mb-4 p-3 bg-white rounded border shadow-sm">
+                    <label class="form-label fw-bold text-secondary mb-2">🏷️ สถานะพิเศษของสินค้า</label>
+                    <div class="row g-2">
+                        <div class="col-md-6">
+                            <div class="form-check py-1">
+                                <input class="form-check-input" type="checkbox" name="is_best_seller" id="is_best_seller" value="1">
+                                <label class="form-check-label fw-bold text-danger cursor-pointer" for="is_best_seller">
+                                    🔥 ตั้งเป็นสินค้าขายดี (Best Seller)
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-check py-1">
+                                <input class="form-check-input" type="checkbox" name="is_new" id="is_new" value="1">
+                                <label class="form-check-label fw-bold text-success cursor-pointer" for="is_new">
+                                    ✨ ตั้งเป็นสินค้ามาใหม่ (New Arrival)
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100 fw-bold">บันทึกเพิ่มสินค้าใหม่</button>
+            </form>
+        </div>
+    </div>
+
+   <!-- 💬 ตารางรายชื่อผู้ใช้ทั้งหมดสำหรับ Admin กดเริ่มแชท -->
+    <div class="card shadow-sm mb-5 border-0">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">👥 รายชื่อผู้ใช้ทั้งหมดในระบบ (คลิกเพื่อเริ่มพิมพ์แชท)</h5>
+        </div>
+        <div class="card-body bg-light">
+            {% if all_users %}
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>ชื่อผู้ใช้งาน</th>
+                            <th>อีเมล</th>
+                            <th class="text-center" style="width: 200px;">จัดการแชท</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for u in all_users %}
+                        <tr>
+                            <td class="fw-bold">{{ u.username }}</td>
+                            <td>{{ u.email }}</td>
+                            <td class="text-center">
+                                <a href="{{ url_for('admin_start_chat', user_id=u.id) }}" class="btn btn-sm btn-primary fw-bold shadow-sm">
+                                    💬 ทักแชทลูกค้า
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="alert alert-warning text-center mb-0">ยังไม่มีผู้ใช้ในระบบ</div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- ตารางแสดงรายการสินค้าในคลัง -->
+    <h4 class="mb-3">📋 รายการสินค้าทั้งหมดในระบบ</h4>
+
+    {% if products %}
+    <div class="card shadow-sm border-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th scope="col" style="width: 80px;" class="text-center">รูปภาพ</th>
+                        <th scope="col">ชื่อสินค้า</th>
+                        <th scope="col">หมวดหมู่/แบรนด์</th>
+                        <th scope="col" class="text-end">ราคา</th>
+                        <th scope="col" class="text-center">คงเหลือ (สต็อก)</th>
+                        <th scope="col" class="text-center" style="width: 150px;">จัดการ</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for product in products %}
+                    <tr>
+                        <td class="text-center">
+                            {% set img_path = url_for('static', filename=product.image_url.replace('static/', '')) if product.image_url.startswith('static/') else product.image_url %}
+                            <a href="javascript:void(0);" onclick="window.open('{{ img_path }}', '_blank', 'width=700,height=700,resizable=yes');">
+                                <img src="{{ img_path }}" width="50" height="50" style="object-fit:cover; border-radius: 6px; cursor: pointer;" alt="product">
+                            </a>
+                        </td>
+                        <td>
+                            <span class="fw-bold">{{ product.name }}</span><br>
+                            <small class="text-muted" style="white-space: pre-line; display: block; max-width: 300px;">{{ product.description }}</small>
+                        </td>
+                        <td>
+                            <span class="badge bg-secondary">{{ product.category }}</span>
+                            <span class="badge bg-info text-dark">{{ product.brand if product.brand else 'None' }}</span>
+                        </td>
+                        <td class="text-end fw-semibold">฿{{ "{:,.2f}".format(product.price) }}</td>
+                        
+                        <!-- ช่องแสดงสต็อก พร้อมฟอร์มปุ่มเติมสต็อกด่วน -->
+                        <td class="text-center">
+                            {% if product.stock <= 5 %}
+                                <span class="badge bg-danger mb-1">เหลือน้อย: {{ product.stock }} ชิ้น</span>
+                            {% else %}
+                                <span class="badge bg-success mb-1">{{ product.stock }} ชิ้น</span>
+                            {% endif %}
+
+                            <!-- ฟอร์มเพิ่มจำนวนสต็อกด่วนสำหรับ Admin -->
+                            <form action="{{ url_for('restock_product', product_id=product.id) }}" method="POST" class="d-flex justify-content-center align-items-center gap-1 mt-1">
+                                <input type="number" name="add_stock" value="10" min="1" class="form-control form-control-sm text-center" style="width: 60px;" required>
+                                <button type="submit" class="btn btn-outline-primary btn-sm" title="เติมสต็อก">➕เติม</button>
+                            </form>
+                        </td>
+
+                        <td class="text-center">
+                            <a href="{{ url_for('edit_product', product_id=product.id) }}" class="btn btn-warning btn-sm mb-1">✏️ แก้ไข</a>
+                            <a href="{{ url_for('delete_product', product_id=product.id) }}" class="btn btn-outline-danger btn-sm mb-1" onclick="return confirm('คุณต้องการลบสินค้านี้ใช่หรือไม่?');">
+                                🗑️ ลบ
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% else %}
+    <div class="alert alert-warning text-center">ยังไม่มีสินค้าในคลังสินค้า</div>
+    {% endif %}
+
+</div>
+{% endblock %}

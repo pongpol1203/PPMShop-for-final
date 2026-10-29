@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-4">ตะกร้าสินค้าของคุณ</h2>
+    
+    {% if cart_items %}
+    <div class="table-responsive">
+        <table class="table align-middle">
+            <thead>
+                <tr>
+                    <th>สินค้า</th>
+                    <th>ราคาต่อหน่วย</th>
+                    <th>จำนวน</th>
+                    <th>ราคารวม</th>
+                    <th>จัดการ</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in cart_items %}
+                <tr>
+                    <td>
+                        <img src="{{ url_for('static', filename=item.image_url.replace('static/', '')) if item.image_url.startswith('static/') else item.image_url }}" 
+                             width="50" height="50" style="object-fit:cover;" class="rounded me-2">
+                        {{ item.name }}
+                    </td>
+                    <td>฿{{ "{:,.2f}".format(item.price) }}</td>
+                    <td>
+                        <!-- ฟอร์มปุ่มเพิ่ม-ลดจำนวน -->
+                        <form method="POST" class="d-inline">
+                            <input type="hidden" name="action" value="update">
+                            <input type="hidden" name="product_id" value="{{ item.id }}">
+                            
+                            <button type="submit" name="change" value="-1" class="btn btn-outline-secondary btn-sm">-</button>
+                            <span class="mx-2 fw-bold">{{ item.quantity }}</span>
+                            <button type="submit" name="change" value="1" class="btn btn-outline-secondary btn-sm">+</button>
+                        </form>
+                    </td>
+                    <td>฿{{ "{:,.2f}".format(item.subtotal) }}</td>
+                    <td>
+                        <!-- ปุ่มลบออกทั้งหมด -->
+                        <form method="POST" class="d-inline">
+                            <input type="hidden" name="action" value="update">
+                            <input type="hidden" name="product_id" value="{{ item.id }}">
+                            <button type="submit" name="change" value="-{{ item.quantity }}" class="btn btn-danger btn-sm">ลบ</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- ส่วนสรุปยอดเงินในหน้า cart.html -->
+    <div class="card p-4 shadow-sm bg-light">
+        <h4 class="mb-3">สรุปยอดคำสั่งซื้อ</h4>
+    
+        <div class="d-flex justify-content-between mb-2">
+            <span>ราคาปกติ (ยอดรวมสินค้า):</span>
+            <span>฿{{ "{:,.2f}".format(subtotal_price) }}</span>
+        </div>
+    
+        <div class="d-flex justify-content-between mb-2 text-muted">
+            <span>ภาษีมูลค่าเพิ่ม (VAT 7%):</span>
+            <span>฿{{ "{:,.2f}".format(vat_amount) }}</span>
+        </div>
+    
+        <hr>
+    
+        <div class="d-flex justify-content-between mb-3">
+            <strong class="fs-5">ราคารวมสุทธิ (รวม VAT 7% แล้ว):</strong>
+            <strong class="fs-5 text-danger">฿{{ "{:,.2f}".format(total_price) }}</strong>
+        </div>
+
+        <!-- ฟอร์มที่อยู่และอัพโหลดสลิปต่อด้านล่างตามเดิมของคุณ -->
+    </div>
+
+    <div class="card p-4 mt-4 shadow-sm">
+        <h4 class="mb-3">ยอดชำระเงินรวมทั้งหมด (รวม VAT 7%): <span class="text-success">฿{{ "{:,.2f}".format(total_price) }}</span></h4>
+        
+        <!-- ฟอร์มกรอกที่อยู่และแนบสลิป -->
+        <form method="POST" enctype="multipart/form-data" class="mt-3">
+            
+            <!-- ส่วนกรอกที่อยู่จัดส่ง -->
+            <div class="mb-3">
+                <label class="form-label">ที่อยู่สำหรับจัดส่งสินค้า:</label>
+                <textarea name="address" class="form-control" rows="3" placeholder="กรอกบ้านเลขที่ ถนน ตำบล อำเภอ จังหวัด รหัสไปรษณีย์" required></textarea>
+            </div>
+
+            <!-- ส่วนข้อมูลการชำระเงินและแนบสลิป -->
+            <div class="p-4 border rounded bg-light mb-3">
+                <h4 class="mb-3">ข้อมูลการชำระเงิน</h4>
+                <div class="alert alert-info">
+                    <strong>โอนเงินผ่านบัญชีบริษัท : แมท ป๊อป จำกัด</strong><br>
+                    ธนาคาร: <strong>กสิกรไทย (KBANK)</strong><br>
+                    ชื่อบัญชี: <strong>แมท ป๊อป จำกัด</strong><br>
+                    เลขที่บัญชี: <strong>123-4-56789-0</strong>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">แนบสลิปหลักฐานการโอนเงิน</label>
+                    <input type="file" name="slip" class="form-control" accept="image/*" required>
+                </div>
+            </div>
+
+            <!-- ปุ่มยืนยันการสั่งซื้อ -->
+            <button type="submit" class="btn btn-success w-100 btn-lg">ยืนยันการสั่งซื้อ</button>
+        </form>
+    </div>
+    {% else %}
+    <div class="alert alert-info text-center p-4">
+        <p class="mb-2">ไม่มีสินค้าในตะกร้า</p>
+        <a href="{{ url_for('index') }}" class="btn btn-primary">เลือกซื้อสินค้า</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
